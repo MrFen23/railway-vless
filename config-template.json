@@ -39,5 +39,42 @@
       "protocol": "blackhole",
       "tag": "block"
     }
-  ]
+  ],
+  "routing": {
+    "domainStrategy": "IPIfNonMatch",
+    "rules": [
+      {
+        "type": "field",
+        "domain": [
+          "geosite:category-ads-all",
+          "geosite:category-ads"
+        ],
+        "outboundTag": "block"
+      },
+      {
+        "type": "field",
+        "domain": [
+          "domain:doubleclick.net",
+          "domain:googleadservices.com",
+          "domain:googlesyndication.com",
+          "domain:google-analytics.com",
+          "domain:adservice.google.com",
+          "domain:adnxs.com",
+          "domain:criteo.com",
+          "domain:criteo.net"
+        ],
+        "outboundTag": "block"
+      },
+      {
+        "type": "field",
+        "outboundTag": "block",
+        "protocol": ["bittorrent"]
+      },
+      {
+        "type": "field",
+        "outboundTag": "direct",
+        "network": "tcp,udp"
+      }
+    ]
+  }
 }

@@ -10,7 +10,12 @@ RUN apk add --no-cache curl unzip ca-certificates \
  && curl -fsSL -o xray.zip \
     "https://github.com/XTLS/Xray-core/releases/download/${XRAY_VERSION}/${XRAY_ASSET}" \
  && unzip -o xray.zip -d out \
- && chmod +x out/xray
+ && chmod +x out/xray \
+ && echo "Downloading geosite/geoip rules (Loyalsoldier)..." \
+ && curl -fsSL -o out/geosite.dat \
+    "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat" \
+ && curl -fsSL -o out/geoip.dat \
+    "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
 
 # --- runtime image ---
 FROM alpine:3.20
@@ -22,6 +27,8 @@ RUN apk add --no-cache ca-certificates tzdata \
 
 WORKDIR /app
 COPY --from=fetcher /dl/out/xray /app/xray
+COPY --from=fetcher /dl/out/geosite.dat /app/geosite.dat
+COPY --from=fetcher /dl/out/geoip.dat /app/geoip.dat
 COPY config-template.json /app/config-template.json
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/xray /app/entrypoint.sh \
