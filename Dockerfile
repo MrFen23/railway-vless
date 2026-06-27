@@ -32,14 +32,20 @@ COPY config-template.json /app/config-template.json
 COPY nginx.conf           /app/nginx.conf
 COPY entrypoint.sh        /app/entrypoint.sh
 COPY geo-update.sh        /app/geo-update.sh
+COPY xray-supervisor.sh   /app/xray-supervisor.sh
 COPY www/                 /app/www/
 
-RUN chmod +x /app/xray /app/entrypoint.sh /app/geo-update.sh \
+RUN chmod +x /app/xray /app/entrypoint.sh /app/geo-update.sh /app/xray-supervisor.sh \
  && chown -R xray:xray /app
 
-# nginx needs to write its pid/tmp/logs under writable locations.
-RUN mkdir -p /run /var/lib/nginx /var/lib/nginx/logs /var/lib/nginx/tmp /var/cache/nginx /var/log/nginx \
- && chown -R xray:xray /run /var/lib/nginx /var/cache/nginx /var/log/nginx /tmp
+# nginx needs writable locations. Use explicit dirs instead of granting /tmp.
+RUN mkdir -p /run /var/lib/nginx/logs /var/lib/nginx/tmp \
+             /var/cache/nginx /var/log/nginx \
+             /tmp/nginx_client /tmp/nginx_proxy /tmp/nginx_fastcgi \
+             /tmp/nginx_uwsgi /tmp/nginx_scgi \
+ && chown -R xray:xray /run /var/lib/nginx /var/cache/nginx /var/log/nginx \
+                       /tmp/nginx_client /tmp/nginx_proxy /tmp/nginx_fastcgi \
+                       /tmp/nginx_uwsgi /tmp/nginx_scgi
 
 USER xray
 EXPOSE 8080

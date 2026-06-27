@@ -1,16 +1,21 @@
 #!/bin/sh
 # Renders all configs from env vars, then supervises:
 #   1. geo-update loop (background)
-#   2. Xray (background)
-#   3. nginx (foreground)
+#   2. xray-supervisor (background) — auto-restarts Xray, reloads geo on USR1
+#   3. nginx (foreground, becomes PID 1 via exec)
 set -e
 
-: "${UUIDS:?UUIDS env var is required (comma-separated UUIDs)}"
 : "${PORT:=8080}"
 
-# Backwards-compat: accept legacy UUID too.
-if [ -z "${UUIDS}" ] && [ -n "${UUID}" ]; then
+# --- Resolve UUIDS: prefer UUIDS, fall back to legacy UUID (bug fix #1) ---
+if [ -n "${UUIDS:-}" ]; then
+    :
+elif [ -n "${UUID:-}" ]; then
+    echo "[entrypoint] NOTE: UUIDS not set — using legacy UUID."
     UUIDS="${UUID}"
+else
+    echo "[entrypoint] ERROR: UUIDS (or legacy UUID) env var is required." >&2
+    exit 1
 fi
 
 # --- Secrets with random defaults (so the box works even if unset) ---
@@ -18,12 +23,13 @@ gen_secret() { tr -dc 'a-z0-9' < /dev/urandom | head -c 12; }
 WS_PATH="${WS_PATH:-/$(gen_secret)}"
 QR_PATH="${QR_PATH:-/$(gen_secret)}"
 
-# URL-encode the WS path for the share link (only "/" needs encoding).
+# URL-encode the WS path for the share link.
 WS_PATH_ENC=$(printf '%s' "${WS_PATH}" | sed 's|/|%2F|g')
 
 # --- Build Xray clients array from UUIDS ---
 CLIENTS=""
 FIRST=1
+PRIMARY_UUID=""
 IFS=','
 for uuid in ${UUIDS}; do
     uuid=$(echo "${uuid}" | tr -d ' ')
@@ -43,8 +49,10 @@ if [ -z "${CLIENTS}" ]; then
     exit 1
 fi
 
+# Show a masked hint instead of leaking full secrets to logs.
+mask() { echo "$1" | sed 's/\(....\).*\(....\)/\1...\2/'; }
 echo "[entrypoint] PORT      = ${PORT}"
-echo "[entrypoint] UUIDS     = ${UUIDS}"
+echo "[entrypoint] UUIDS     = $(mask "${PRIMARY_UUID}") (+$(($(echo "${UUIDS}" | tr ',' '\n' | grep -c .) - 1)) more)"
 echo "[entrypoint] WS_PATH   = ${WS_PATH}"
 echo "[entrypoint] QR_PATH   = ${QR_PATH}"
 
@@ -59,8 +67,7 @@ sed -e "s|{{CLIENTS}}|${CLIENTS}|g" \
     -e "s|{{WS_PATH}}|${WS_PATH}|g" \
     /app/config-template.json > /app/config.json
 
-# --- Render QR page (used by entrypoint-injected values) ---
-# DOMAIN is the Railway public hostname; auto-detect via $RAILWAY_PUBLIC_DOMAIN
+# --- Render QR page ---
 DOMAIN="${DOMAIN:-${RAILWAY_PUBLIC_DOMAIN:-}}"
 if [ -z "${DOMAIN}" ]; then
     echo "[entrypoint] WARNING: DOMAIN not set — QR page will show a placeholder."
@@ -70,17 +77,27 @@ sed -e "s|{{DOMAIN}}|${DOMAIN}|g" \
     -e "s|{{UUID}}|${PRIMARY_UUID}|g" \
     -e "s|{{WS_PATH_ENC}}|${WS_PATH_ENC}|g" \
     /app/www/qr.html > /app/www/qr-runtime.html
-
-# Point nginx at the rendered QR page.
 sed -i "s|/qr.html|/qr-runtime.html|g" /app/nginx-runtime.conf
 
-# --- Launch processes ---
+# --- Launch background processes ---
 echo "[entrypoint] starting geo-update loop..."
 sh /app/geo-update.sh &
 
-echo "[entrypoint] starting Xray..."
-/app/xray run -config /app/config.json &
+echo "[entrypoint] starting xray supervisor..."
+sh /app/xray-supervisor.sh &
+SUPER_PID=$!
 
-echo "[entrypoint] starting nginx..."
-# Foreground: nginx keeps the container alive. Awaits SIGTERM from Railway.
-nginx -c /app/nginx-runtime.conf -g 'daemon off;'
+# --- Graceful shutdown: stop background processes, then nginx exits ---
+cleanup() {
+    echo "[entrypoint] shutdown — stopping background processes..."
+    touch /tmp/xray-stop
+    kill "${SUPER_PID}" 2>/dev/null
+    pkill -f "geo-update.sh" 2>/dev/null
+    nginx -s stop 2>/dev/null
+}
+trap cleanup TERM INT
+
+echo "[entrypoint] starting nginx (PID 1)..."
+# exec replaces the shell with nginx — it becomes PID 1, receives SIGTERM from
+# Railway directly, and the container shuts down cleanly on redeploy.
+exec nginx -c /app/nginx-runtime.conf -g 'daemon off;'
