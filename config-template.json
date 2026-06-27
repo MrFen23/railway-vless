@@ -22,6 +22,12 @@
         "wsSettings": {
           "path": "/",
           "headers": {}
+        },
+        "sockopt": {
+          "tcpFastOpen": true,
+          "tcpNoDelay": true,
+          "tcpKeepAliveInterval": 30,
+          "domainStrategy": "AsIs"
         }
       },
       "sniffing": {
@@ -33,7 +39,16 @@
   "outbounds": [
     {
       "protocol": "freedom",
-      "tag": "direct"
+      "tag": "direct",
+      "settings": {
+        "domainStrategy": "AsIs"
+      },
+      "streamSettings": {
+        "sockopt": {
+          "tcpFastOpen": true,
+          "tcpNoDelay": true
+        }
+      }
     },
     {
       "protocol": "blackhole",
@@ -41,7 +56,7 @@
     }
   ],
   "routing": {
-    "domainStrategy": "IPIfNonMatch",
+    "domainStrategy": "AsIs",
     "rules": [
       {
         "type": "field",
