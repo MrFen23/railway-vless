@@ -37,9 +37,9 @@ COPY www/                 /app/www/
 RUN chmod +x /app/xray /app/entrypoint.sh /app/geo-update.sh \
  && chown -R xray:xray /app
 
-# nginx needs to write its pid/tmp under a writable location.
-RUN mkdir -p /run /var/cache/nginx /var/log/nginx \
- && chown -R xray:xray /run /var/cache/nginx /var/log/nginx
+# nginx needs to write its pid/tmp/logs under writable locations.
+RUN mkdir -p /run /var/lib/nginx /var/lib/nginx/logs /var/lib/nginx/tmp /var/cache/nginx /var/log/nginx \
+ && chown -R xray:xray /run /var/lib/nginx /var/cache/nginx /var/log/nginx /tmp
 
 USER xray
 EXPOSE 8080
