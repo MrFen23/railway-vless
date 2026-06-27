@@ -24,7 +24,8 @@ WORKDIR /app
 COPY --from=fetcher /dl/out/xray /app/xray
 COPY config-template.json /app/config-template.json
 COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/xray /app/entrypoint.sh
+RUN chmod +x /app/xray /app/entrypoint.sh \
+ && chown -R xray:xray /app
 
 USER xray
 EXPOSE 8080
