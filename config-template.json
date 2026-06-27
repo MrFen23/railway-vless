@@ -1,0 +1,43 @@
+{
+  "log": {
+    "loglevel": "warning",
+    "access": "/dev/stdout",
+    "error": "/dev/stderr"
+  },
+  "inbounds": [
+    {
+      "tag": "vless-in",
+      "port": {{PORT}},
+      "listen": "0.0.0.0",
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          { "id": "{{UUID}}" }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "ws",
+        "security": "none",
+        "wsSettings": {
+          "path": "/",
+          "headers": {}
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls"]
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "protocol": "freedom",
+      "tag": "direct"
+    },
+    {
+      "protocol": "blackhole",
+      "tag": "block"
+    }
+  ]
+}

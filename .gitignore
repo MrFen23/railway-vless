@@ -1,0 +1,6 @@
+# Local artifacts / secrets — never commit.
+config.json
+*.local
+.env
+.DS_Store
+__debug_bin*
