@@ -1,7 +1,6 @@
-# Multi-stage build: download Xray binary in a throw-away layer, then run.
+# Multi-stage build: download Xray binary + geo databases in a throw-away layer.
 FROM alpine:3.20 AS fetcher
 
-# Pinned Xray-core version (update here to upgrade).
 ARG XRAY_VERSION=v26.3.27
 ARG XRAY_ASSET=Xray-linux-64.zip
 
@@ -20,19 +19,27 @@ RUN apk add --no-cache curl unzip ca-certificates \
 # --- runtime image ---
 FROM alpine:3.20
 LABEL maintainer="MrFen23"
-LABEL description="VLESS + WebSocket VPN server for Railway"
+LABEL description="VLESS + WebSocket VPN server for Railway (nginx front + Xray back)"
 
-RUN apk add --no-cache ca-certificates tzdata \
+RUN apk add --no-cache ca-certificates tzdata nginx curl \
  && adduser -D -H xray
 
 WORKDIR /app
-COPY --from=fetcher /dl/out/xray /app/xray
+COPY --from=fetcher /dl/out/xray        /app/xray
 COPY --from=fetcher /dl/out/geosite.dat /app/geosite.dat
-COPY --from=fetcher /dl/out/geoip.dat /app/geoip.dat
+COPY --from=fetcher /dl/out/geoip.dat   /app/geoip.dat
 COPY config-template.json /app/config-template.json
-COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/xray /app/entrypoint.sh \
+COPY nginx.conf           /app/nginx.conf
+COPY entrypoint.sh        /app/entrypoint.sh
+COPY geo-update.sh        /app/geo-update.sh
+COPY www/                 /app/www/
+
+RUN chmod +x /app/xray /app/entrypoint.sh /app/geo-update.sh \
  && chown -R xray:xray /app
+
+# nginx needs to write its pid/tmp under a writable location.
+RUN mkdir -p /run /var/cache/nginx /var/log/nginx \
+ && chown -R xray:xray /run /var/cache/nginx /var/log/nginx
 
 USER xray
 EXPOSE 8080

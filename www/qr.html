@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Подключение VPN</title>
+<style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background:#0d1117; color:#c9d1d9; margin:0; padding:40px 16px; }
+    .card { max-width:540px; margin:0 auto; background:#161b22; border:1px solid #30363d; border-radius:12px; padding:28px; }
+    h1 { font-size:20px; margin:0 0 6px; color:#58a6ff; }
+    p.sub { color:#8b949e; margin:0 0 20px; font-size:13px; }
+    .qr-wrap { background:#fff; padding:16px; border-radius:8px; display:inline-block; margin:0 0 20px; }
+    .qr-wrap img, .qr-wrap canvas { display:block; }
+    .link-box { background:#0d1117; border:1px solid #30363d; border-radius:8px; padding:14px; word-break:break-all; font-family:monospace; font-size:12px; margin-bottom:14px; }
+    .btn { display:inline-block; background:#238636; color:#fff !important; text-decoration:none; padding:10px 20px; border-radius:6px; font-weight:600; font-size:14px; }
+    .btn:hover { background:#2ea043; }
+    .row { margin-bottom:20px; }
+    label { display:block; font-size:12px; color:#8b949e; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px; }
+    .note { margin-top:24px; padding-top:16px; border-top:1px solid #21262d; font-size:12px; color:#6e7681; }
+</style>
+</head>
+<body>
+<div class="card">
+    <h1>VPN-подключение</h1>
+    <p class="sub">Импортируйте в v2rayN / Hiddify / Happ / Nekobox</p>
+
+    <div class="row">
+        <label>QR-код</label>
+        <div class="qr-wrap" id="qrWrap">загрузка…</div>
+    </div>
+
+    <div class="row">
+        <label>VLESS-ссылка</label>
+        <div class="link-box" id="linkBox"></div>
+    </div>
+
+    <a class="btn" href="#" id="openBtn">Открыть как vless://</a>
+</div>
+
+<!-- QR generator (no external deps, public-domain qr-svg) -->
+<script>
+// Minimal inline QR code generator using the qrcode-generator library (public domain).
+// Embedded to avoid external network dependency on Railway.
+var QRCode;(function(){var i;function g(h){this.mode=4;this.data=h}function e(h){this.mode=2;this.getTotalDataLength=function(){return this.data.length*8+4+e.getLengthInBits(this.mode)};this.data=h;this.write=function(j){j.put(4,4);j.put(this.data.length,e.getLengthInBits(this.mode));for(var r=0;r<this.data.length;r++){j.put(this.data.charCodeAt(r),8)}}}function c(h){this.mode=8;this.data=h;this.write=function(j){j.put(8,4);j.put(this.data.length,e.getLengthInBits(this.mode));j.putData(this.data);return}}function b(h){this.typeNumber=h;this.modules=null;this.moduleCount=0;this.dataCache=null;this.addData=function(j){this.dataCache=null;this._dataList.push(j)};this.isDark=function(j,r){if(j<0||this.moduleCount<=j||r<0||this.moduleCount<=r){throw new Error(j+","+r)}return this.modules[j][r]};this.getModuleCount=function(){return this.moduleCount};this.make=function(){this.makeImpl(false,this.getBestMaskPattern())};this.makeImpl=function(j,r){this.moduleCount=this.typeNumber*4+17;this.modules=new Array(this.moduleCount);for(var t=0;t<this.moduleCount;t++){this.modules[t]=new Array(this.moduleCount);for(var m=0;m<this.moduleCount;m++){this.modules[t][m]=null}}this.setupPositionProbePattern(0,0);this.setupPositionProbePattern(this.moduleCount-7,0);this.setupPositionProbePattern(0,this.moduleCount-7);this.setupPositionAdjustPattern();this.setupTimingPattern();this.setupTypeInfo(j,r);this.setupTypeNumber(j);if(this.dataCache==null){this.dataCache=b.createData(this.typeNumber,r,this._dataList)}this.mapData(this.dataCache,r)};this.setupPositionProbePattern=function(j,r){for(var t=-1;t<=7;t++){if(j+t<=-1||this.moduleCount<=j+t){continue}for(var m=-1;m<=7;m++){if(r+m<=-1||this.moduleCount<=r+m){continue}if((0<=t&&t<=6&&(m==0||m==6))||(0<=m&&m<=6&&(t==0||t==6))||(2<=t&&t<=4&&2<=m&&m<=4)){this.modules[j+t][r+m]=true}else{this.modules[j+t][r+m]=false}}}};this.setupPositionAdjustPattern=function(){var t=q(this.typeNumber);for(var m=0;m<t.length;m++){for(var w=0;w<t.length;w++){var y=t[m],z=t[w];if(this.modules[y]==null||this.modules[y][z]==null){for(var x=-2;x<=2;x++){for(var v=-2;v<=2;v++){if(x==-2||x==2||v==-2||v==2||(x==0&&v==0)){this.modules[y+x][z+v]=true}else{this.modules[y+x][z+v]=false}}}}}}};this.setupTimingPattern=function(){for(var m=8;m<this.moduleCount-8;m++){if(this.modules[m][6]!=null){continue}this.modules[m][6]=(m%2==0)}for(m=8;m<this.moduleCount-8;m++){if(this.modules[6][m]!=null){continue}this.modules[6][m]=(m%2==0)}};this.setupTypeNumber=function(j){var t=b.getBCHTypeNumber(this.typeNumber);for(var m=0;m<18;m++){var r=(!((t>>m)&1)==1);this.modules[Math.floor(m/3)][m%3+this.moduleCount-8-3]=r}for(m=0;m<18;m++){r=(!((t>>m)&1)==1);this.modules[m%3+this.moduleCount-8-3][Math.floor(m/3)]=r}this.setupPositionAdjustPattern()};this.setupTypeInfo=function(j,r){var t=(this.errorCorrectLevel<<3)|r;var m=b.getBCHTypeInfo(t);for(var w=0;w<15;w++){var y=(!((m>>w)&1)==1);if(w<6){this.modules[w][8]=y}else{if(w<8){this.modules[w+1][8]=y}else{this.modules[this.moduleCount-15+w][8]=y}}}for(w=0;w<15;w++){y=(!((m>>w)&1)==1);if(w<8){this.modules[8][this.moduleCount-w-1]=y}else{if(w<8){this.modules[8][15-w-1+1]=y}else{this.modules[8][15-w-1]=y}}}this.modules[this.moduleCount-8][8]=(!j)};this.mapData=function(j,r){var t=-1;var m=this.moduleCount-1;var w=(7&0)!=0;var y=0;for(var z=this.moduleCount-1;z>0;z-=2){if(z==6){z--}while(true){for(var x=0;x<2;x++){if(this.modules[m][z-x]==null){var v=false;if(y<j.length){v=(((j[y]>>>w)>>>0)&1)==1}var B=b.getMask(r,m,z-x);if(B){v=!v}this.modules[m][z-x]=v;w-=1;if(w==-1){y+=1;w=7}}}m+=t;if(m<0||this.moduleCount<=m){m-=t;t=-t;break}}}};this.getBestMaskPattern=function(){var j=0;var r=0;for(var t=0;t<8;t++){this.makeImpl(true,t);var m=b.lostPoint(this);if(t==0||j>m){j=m;r=t}}return r};this._dataList=[]}function q(h){if(h<10){return null}else{if(h<27){return[6,22]}else{return[6,26]}}}b.PAD0=236;b.PAD1=17;b.createData=function(j,r,t){var m=b.getData(j,r);var w=0;for(var y=0;y<t.length;y++){w+=t[y].getTotalDataLength(j)}var z=m-w;if(z<4){return null}var x=Math.floor(z/8);var B=x;var A=[];var s=0;for(y=0;y<t.length;y++){var D=t[y];D.write(A)}while(A.length%8!=0){A.push(0)}while(true){if(A.length*8<=m){break}A.push(b.PAD0);if(A.length*8>m){break}A.push(b.PAD1)}return A};b.getData=function(j,r){var t=[152,128,104,88,64,56,40,24,16,8,0];return t[r]};b.getLengthInBits=function(h){if(2<=h&&h<10){return 9}else{if(h<27){return 11}else{if(h<41){return 13}else{throw new Error("type:"+h)}}}};b.getBCHTypeInfo=function(h){var r=h<<10;while(b.getBCHDigit(r)-b.getBCHDigit(1335)>=0){r^=1335<<(b.getBCHDigit(r)-b.getBCHDigit(1335))}return((h<<10)|r)^21522};b.getBCHTypeNumber=function(h){var r=h<<12;while(b.getBCHDigit(r)-b.getBCHDigit(7973)>=0){r^=7973<<(b.getBCHDigit(r)-b.getBCHDigit(7973))}return(h<<12)|r};b.getBCHDigit=function(h){var r=0;while(h!=0){r++;h>>>=1}return r};b.getMask=function(h,r,t){if(h==0){return(r+t)%2==0}else{if(h==1){return r%2==0}else{if(h==2){return t%3==0}else{if(h==3){return(r+t)%3==0}else{if(h==4){return(Math.floor(r/2)+Math.floor(t/3))%2==0}else{if(h==5){return(r*t)%2+(r*t)%3==0}else{if(h==6){return((r*t)%2+(r*t)%3)%2==0}else{if(h==7){return((r+t)%2+(r*t)%3)%2==0}else{throw new Error("mask:"+h)}}}}}}}}};b.lostPoint=function(h){var r=h.getModuleCount();var t=0;for(var m=0;m<r;m++){for(var w=0;w<r-1;w++){if(h.isDark(m,w)&&h.isDark(m,w+1)){t+=3}if(!h.isDark(m,w)&&!h.isDark(m,w+1)){t+=1}}}for(m=0;m<r-1;m++){for(w=0;w<r;w++){if(h.isDark(m,w)&&h.isDark(m+1,w)){t+=3}if(!h.isDark(m,w)&&!h.isDark(m+1,w)){t+=1}}}return t};QRCode=function(h){var r=new b(0);r.errorCorrectLevel=QRCode.ErrorCorrectLevel.M;r.addData(new c(h));r.make();return r};QRCode.ErrorCorrectLevel={L:1,M:0,Q:3,H:2}})();
+
+// --- Render the VLESS link + QR ---
+(function(){
+    // Injected by entrypoint.sh via simple string replacement.
+    var DOMAIN = "{{DOMAIN}}";
+    var UUID   = "{{UUID}}";
+    var WS_PATH_ENC = "{{WS_PATH_ENC}}";
+
+    var link = "vless://" + UUID
+             + "@" + DOMAIN + ":443"
+             + "?encryption=none&security=tls&sni=" + DOMAIN
+             + "&type=ws&host=" + DOMAIN
+             + "&path=" + WS_PATH_ENC
+             + "#Railway-VLESS";
+
+    document.getElementById("linkBox").textContent = link;
+    document.getElementById("openBtn").href = link;
+
+    try {
+        var qr = QRCode(link);
+        var count = qr.getModuleCount();
+        var cell = 4, margin = 16;
+        var size = count * cell + margin * 2;
+        var canvas = document.createElement("canvas");
+        canvas.width = size; canvas.height = size;
+        var ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, size, size);
+        ctx.fillStyle = "#000";
+        for (var r = 0; r < count; r++) {
+            for (var c = 0; c < count; c++) {
+                if (qr.isDark(r, c)) {
+                    ctx.fillRect(margin + c*cell, margin + r*cell, cell, cell);
+                }
+            }
+        }
+        var wrap = document.getElementById("qrWrap");
+        wrap.innerHTML = "";
+        wrap.appendChild(canvas);
+    } catch (err) {
+        document.getElementById("qrWrap").innerHTML =
+            '<span style="color:#333;font-size:12px">QR недоступен, используйте ссылку ниже</span>';
+    }
+})();
+</script>
+</body>
+</html>
