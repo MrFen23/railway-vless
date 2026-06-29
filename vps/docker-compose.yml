@@ -1,0 +1,20 @@
+services:
+  vpn:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: soul-vpn
+    restart: unless-stopped
+    ports:
+      - "443:8080"   # host 443 (TLS) -> container 8080 (nginx listens on 8080)
+    environment:
+      - UUIDS=${UUIDS}
+      - WS_PATH=${WS_PATH}
+      - QR_PATH=${QR_PATH}
+      - DOMAIN=${DOMAIN}
+      - PORT=8080
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ../vps/nginx-vps.conf:/app/nginx.conf:ro
+    mem_limit: 1g
+

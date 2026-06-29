@@ -2,5 +2,7 @@
 config.json
 *.local
 .env
+.env
+vps/.env
 .DS_Store
 __debug_bin*
